@@ -7,8 +7,9 @@ import jakarta.persistence.*;
 public class EmployeeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // Removed @GeneratedValue to allow manual ID entry
     private int id;
+
     private String name;
     private String address;
     private String email;
