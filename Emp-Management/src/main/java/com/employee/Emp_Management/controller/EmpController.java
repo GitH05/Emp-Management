@@ -4,6 +4,7 @@ import com.employee.Emp_Management.entity.EmployeeEntity;
 import com.employee.Emp_Management.service.EmployeeService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,30 +20,35 @@ public class EmpController {
     @Autowired
     private EmployeeService employeeService;
 
-    // Home page - list all employees and show session message if present
+    // Home page - accessible to all authenticated users
     @GetMapping("/")
     public String home(Model model, HttpSession session) {
-        // Add all employee
         List<EmployeeEntity> employees = employeeService.getAllEmployee();
         model.addAttribute("employees", employees);
 
-        // Display session message if present
         String msg = (String) session.getAttribute("msg");
         if (msg != null) {
             model.addAttribute("msg", msg);
             session.removeAttribute("msg");
         }
-
-        return "index"; // Thymeleaf will resolve to templates/index.html
+        return "index";
     }
 
-    // Form page to add new employee
+    // Login page
+    @GetMapping("/login")
+    public String login() {
+        return "login";  // your login.html
+    }
+
+    // Form page to add new employee (ADMIN only)
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/addEmployee")
     public String addEmployee() {
-        return "addEmp"; // resolves to templates/addEmp.html
+        return "addEmp"; // templates/addEmp.html
     }
 
-    // Save employee and redirect with session message
+    // Save employee (ADMIN only)
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
     public String employeeRegister(@ModelAttribute EmployeeEntity employee, HttpSession session) {
         employeeService.addEmployee(employee);
@@ -50,27 +56,36 @@ public class EmpController {
         return "redirect:/";
     }
 
-//    get edit form
+    // Get edit form (ADMIN only)
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable int id, Model model) {
-        EmployeeEntity e=employeeService.getEmployeeById(id);
+        EmployeeEntity e = employeeService.getEmployeeById(id);
         model.addAttribute("emp", e);
         return "edit";
     }
 
-//    update
+    // Update employee (ADMIN only)
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/update")
     public String update(@ModelAttribute EmployeeEntity employee, HttpSession session) {
         employeeService.addEmployee(employee);
-        session.setAttribute("msg","Update Successfully.");
+        session.setAttribute("msg", "Update Successfully.");
         return "redirect:/";
     }
 
-//    delete
+    // Delete employee (ADMIN only)
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/delete/{id}")
     public String deleteEmployee(@PathVariable int id, HttpSession session) {
         employeeService.deleteEmployee(id);
-        session.setAttribute("msg","Delete Successfully.");
+        session.setAttribute("msg", "Delete Successfully.");
         return "redirect:/";
+    }
+
+    // Error page for access denied
+    @GetMapping("/error")
+    public String accessDenied() {
+        return "error";  // templates/error.html
     }
 }
